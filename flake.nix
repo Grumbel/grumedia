@@ -31,11 +31,14 @@
         };
 
         apps = rec {
-          default = audio-join;
-
           audio-join = flake-utils.lib.mkApp {
             drv = packages.grumedia;
             exePath = "/bin/grumedia-audio-join";
+          };
+
+          audio-split = flake-utils.lib.mkApp {
+            drv = packages.grumedia;
+            exePath = "/bin/grumedia-audio-split";
           };
 
           youtube2mp3 = flake-utils.lib.mkApp {
