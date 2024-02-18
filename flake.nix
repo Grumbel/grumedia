@@ -21,20 +21,26 @@
             installPhase = ''
               mkdir -p $out/bin
               for i in *.sh; do
-                install "$i" "$out/bin/''${i%%.sh}"
-                substituteInPlace "$out/bin/''${i%%.sh}" \
-                  --replace "FFMPEG=ffmpeg" "FFMPEG='${pkgs.ffmpeg}/bin/ffmpeg'"
+                install "$i" "$out/bin/grumedia-''${i%%.sh}"
+                substituteInPlace "$out/bin/grumedia-''${i%%.sh}" \
+                  --replace "FFMPEG=ffmpeg" "FFMPEG='${pkgs.ffmpeg}/bin/ffmpeg'" \
+                  --replace "YTDLP=yt-dlp"  "YTDLP='${pkgs.yt-dlp}/bin/yt-dlp'"
               done
             '';
           };
         };
 
         apps = rec {
-          default = grumedia-audio-cat;
+          default = audio-cat;
 
-          grumedia-audio-cat = flake-utils.lib.mkApp {
+          audio-cat = flake-utils.lib.mkApp {
             drv = packages.grumedia;
             exePath = "/bin/grumedia-audio-cat";
+          };
+
+          youtube2mp3 = flake-utils.lib.mkApp {
+            drv = packages.grumedia;
+            exePath = "/bin/grumedia-youtube2mp3";
           };
         };
       }
