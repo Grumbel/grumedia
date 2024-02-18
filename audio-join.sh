@@ -8,7 +8,7 @@ display_help() {
   echo "Usage: $0 [OPTION]... FILE..."
   echo "Options:"
   echo "  -h, --help          Display this help message"
-  echo "  -o, --output=FILE   Write results to FILE"
+  echo "  -o, --output FILE   Write results to FILE"
 }
 
 # Parse command line arguments
@@ -31,6 +31,7 @@ fi
 
 if [ ! ${#REST[@]} -gt 0 ]; then
   echo "error: FILE argument missing" 1>&2
+  exit 1
 fi
 
 # Generate file list

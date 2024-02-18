@@ -31,11 +31,11 @@
         };
 
         apps = rec {
-          default = audio-cat;
+          default = audio-join;
 
-          audio-cat = flake-utils.lib.mkApp {
+          audio-join = flake-utils.lib.mkApp {
             drv = packages.grumedia;
-            exePath = "/bin/grumedia-audio-cat";
+            exePath = "/bin/grumedia-audio-join";
           };
 
           youtube2mp3 = flake-utils.lib.mkApp {
