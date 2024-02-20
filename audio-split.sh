@@ -23,13 +23,15 @@ FFMPEG=ffmpeg
 OUTPATTERN=""
 INPUTFILE=""
 SEGMENT_TIME="1800"
+SEGMENT_START_NUMBER="0"
 
 display_help() {
   echo "Usage: $0 [OPTION]... FILE"
   echo "Options:"
   echo "  -h, --help            Display this help message"
   echo "  -o, --output PATTERN  Write results to PATTERN (e.g \"out%02d.wav\")"
-  echo "  -s, --split SECONDS   Split every SECONDS seconds (default: $SEGMENT_TIME)"
+  echo "  -s, --split SECONDS   Split every SECONDS seconds (default: ${SEGMENT_TIME})"
+  echo "  -S, --start NUM       Start numbering at NUM (default: ${START_NUMBER})"
 }
 
 # Parse command line arguments
@@ -37,6 +39,8 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     -h | --help ) display_help; exit ;;
     -o | --output ) OUTPATTERN="$2"; shift 2 ;;
+    -s | --split ) SEGMENT_TIME="$2"; shift 2 ;;
+    -S | --start ) SEGMENT_START_NUMBER="$2"; shift 2 ;;
     -* ) echo "error: unknown option $1" 1>&2; exit 1 ;;
     * )
       if [[ ! -z "${INPUTFILE}" ]]; then
@@ -61,6 +65,11 @@ if [ -z "${INPUTFILE}" ]; then
   exit 1
 fi
 
-"${FFMPEG}" -i "${INPUTFILE}" -f segment -segment_time "${SEGMENT_TIME}" -start_number 1 -c copy "${OUTPATTERN}"
+"${FFMPEG}" \
+  -i "${INPUTFILE}" \
+  -f segment \
+  -segment_time "${SEGMENT_TIME}" \
+  -segment_start_number "${SEGMENT_START_NUMBER}" \
+  -c copy "${OUTPATTERN}"
 
 # EOF #
