@@ -41,6 +41,11 @@
             exePath = "/bin/grumedia-audio-split";
           };
 
+          audio-filter = flake-utils.lib.mkApp {
+            drv = packages.grumedia;
+            exePath = "/bin/grumedia-audio-filter";
+          };
+
           youtube2mp3 = flake-utils.lib.mkApp {
             drv = packages.grumedia;
             exePath = "/bin/grumedia-youtube2mp3";
