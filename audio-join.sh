@@ -18,7 +18,10 @@
 
 set -e
 
+GETOPT=getopt
 FFMPEG=ffmpeg
+
+OUTFILE=""
 
 display_help() {
   echo "Usage: $0 [OPTION]... FILE..."
@@ -28,14 +31,14 @@ display_help() {
 }
 
 # Parse command line arguments
-OUTFILE=""
-REST=()
+opts=$("${GETOPT}" --name "$0" --options ho: --longoptions help,output: -- "$@")
+eval set -- "$opts"
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
     -h | --help ) display_help; exit ;;
     -o | --output ) OUTFILE="$2"; shift 2 ;;
-    -* ) echo "error: unknown option $1" 1>&2; exit 1 ;;
-    * ) REST+=("$1"); shift ;;
+    -- ) shift; break ;;
   esac
 done
 
@@ -45,13 +48,13 @@ if [ -z "$OUTFILE" ]; then
   exit 1
 fi
 
-if [ ! ${#REST[@]} -gt 0 ]; then
+if [ ! $# -gt 0 ]; then
   echo "error: FILE argument missing" 1>&2
   exit 1
 fi
 
 # Generate file list
-FILELIST=$(for i in "${REST[@]}"; do
+FILELIST=$(for i in "$@"; do
   printf "file %q\n" "$(realpath "$i")"
 done)
 

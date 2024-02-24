@@ -24,7 +24,8 @@
                 install "$i" "$out/bin/grumedia-''${i%%.sh}"
                 substituteInPlace "$out/bin/grumedia-''${i%%.sh}" \
                   --replace "FFMPEG=ffmpeg" "FFMPEG='${pkgs.ffmpeg}/bin/ffmpeg'" \
-                  --replace "YTDLP=yt-dlp"  "YTDLP='${pkgs.yt-dlp}/bin/yt-dlp'"
+                  --replace "YTDLP=yt-dlp"  "YTDLP='${pkgs.yt-dlp}/bin/yt-dlp'" \
+                  --replace "GETOPT=getopt"  "GETOPT='${pkgs.getopt}/bin/getopt'"
               done
             '';
           };

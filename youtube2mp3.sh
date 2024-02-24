@@ -16,11 +16,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+set -e
+
+GETOPT=getopt
 YTDLP=yt-dlp
 
 AUDIO_FORMAT=mp3
 AUDIO_QUALITY=5
-OUTPUT_FORMAT="%(title)s.%(ext)s"xb
+OUTPUT_FORMAT="%(title)s.%(ext)s"
 URLS=()
 
 display_help() {
@@ -32,6 +35,9 @@ display_help() {
   echo "  -f, --format FMT      Audio format (default: ${AUDIO_FORMAT})"
 }
 
+opts=$("${GETOPT}" --name "$0" --options ho:q:f: --longoptions help,output:,quality:,format: -- "$@")
+eval set -- "$opts"
+
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -39,8 +45,7 @@ while [[ $# -gt 0 ]]; do
     -o | --output ) OUTPUT_FORMAT="$2"; shift 2 ;;
     -q | --quality ) AUDIO_QUALITY="$2"; shift 2 ;;
     -f | --format ) AUDIO_FORMAT="$2"; shift 2 ;;
-    -* ) echo "error: unknown option $1" 1>&2; exit 1 ;;
-    * ) URLS+=("$1"); shift ;;
+    -- ) shift; URLS=("$@"); break ;;
   esac
 done
 

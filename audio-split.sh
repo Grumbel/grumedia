@@ -18,10 +18,11 @@
 
 set -e
 
+GETOPT=getopt
 FFMPEG=ffmpeg
 
-OUTPATTERN=""
 INPUTFILE=""
+OUTPATTERN=""
 SEGMENT_TIME="1800"
 SEGMENT_START_NUMBER="0"
 
@@ -35,33 +36,36 @@ display_help() {
 }
 
 # Parse command line arguments
+opts=$("${GETOPT}" --name "$0" --options ho:s:S: --longoptions help,output:,split:,start: -- "$@")
+eval set -- "$opts"
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
     -h | --help ) display_help; exit ;;
     -o | --output ) OUTPATTERN="$2"; shift 2 ;;
     -s | --split ) SEGMENT_TIME="$2"; shift 2 ;;
     -S | --start ) SEGMENT_START_NUMBER="$2"; shift 2 ;;
-    -* ) echo "error: unknown option $1" 1>&2; exit 1 ;;
-    * )
-      if [[ ! -z "${INPUTFILE}" ]]; then
-        echo "error: multiple input files given" 1>&2
-        exit 1
-      fi
-
-      INPUTFILE="$1"
-      shift
-      ;;
+    -- )
+      shift;
+      break ;;
   esac
 done
 
 # Validate command line arguments
-if [ -z "${OUTPATTERN}" ]; then
-  echo "error: option --output required" 1>&2
+if [[ $# -gt 1 ]]; then
+  echo "error: multiple input files given" 1>&2
+  exit 1
+else
+  INPUTFILE="$1"
+fi
+
+if [[ -z "${INPUTFILE}" ]]; then
+  echo "error: FILE argument missing" 1>&2
   exit 1
 fi
 
-if [ -z "${INPUTFILE}" ]; then
-  echo "error: FILE argument missing" 1>&2
+if [ -z "${OUTPATTERN}" ]; then
+  echo "error: option --output required" 1>&2
   exit 1
 fi
 

@@ -18,7 +18,13 @@
 
 set -e
 
+GETOPT=getopt
 FFMPEG=ffmpeg
+
+INPUTFILE=""
+OUTFILE=""
+TEMPO=1
+REST=()
 
 display_help() {
   echo "Usage: $0 [OPTION]... FILE"
@@ -29,30 +35,31 @@ display_help() {
 }
 
 # Parse command line arguments
-OUTFILE=""
-REST=()
-TEMPO=1
+opts=$("${GETOPT}" --name "$0" --options ho:t: --longoptions help,output:,tempo: -- "$@")
+eval set -- "$opts"
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
     -h | --help ) display_help; exit ;;
     -o | --output ) OUTFILE="$2"; shift 2 ;;
     -t | --tempo ) TEMPO="$2"; shift 2 ;;
-    -* ) echo "error: unknown option $1" 1>&2; exit 1 ;;
-    * ) REST+=("$1"); shift ;;
+    -- ) shift; break ;;
   esac
 done
 
 # Validate command line arguments
-if [ -z "$OUTFILE" ]; then
+if [[ $# -gt 1 ]]; then
+  echo "error: FILE argument missing" 1>&2
+  exit 1
+else
+  INPUTFILE="$1"
+fi
+
+if [[ -z "$OUTFILE" ]]; then
   echo "error: option --output required" 1>&2
   exit 1
 fi
 
-if [ ! ${#REST[@]} -ne 0 ]; then
-  echo "error: FILE argument missing" 1>&2
-  exit 1
-fi
-
-"${FFMPEG}" -i "${REST[0]}" -filter:a "atempo=${TEMPO}" -vn -b:a 128K -vn "${OUTFILE}"
+"${FFMPEG}" -i "${INPUTFILE}" -filter:a "atempo=${TEMPO}" -vn -b:a 128K -vn "${OUTFILE}"
 
 # EOF #
