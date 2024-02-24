@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 # grumedia
 # Copyright (C) 2024 Ingo Ruhnke <grumbel@gmail.com>
@@ -18,6 +18,48 @@
 
 YTDLP=yt-dlp
 
-exec "${YTDLP}" --extract-audio --audio-format mp3 --audio-quality 0 --output "%(title)s.%(ext)s" "$@"
+AUDIO_FORMAT=mp3
+AUDIO_QUALITY=5
+OUTPUT_FORMAT="%(title)s.%(ext)s"xb
+URLS=()
+
+display_help() {
+  echo "Usage: $0 [OPTION]... URL..."
+  echo "Options:"
+  echo "  -h, --help            Display this help message"
+  echo "  -o, --output PATTERN  Write results to PATTERN (default: ${OUTPUT_FORMAT}"
+  echo "  -q, --quality NUM     Audio quality (default: ${AUDIO_QUALITY})"
+  echo "  -f, --format FMT      Audio format (default: ${AUDIO_FORMAT})"
+}
+
+# Parse command line arguments
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -h | --help ) display_help; exit ;;
+    -o | --output ) OUTPUT_FORMAT="$2"; shift 2 ;;
+    -q | --quality ) AUDIO_QUALITY="$2"; shift 2 ;;
+    -f | --format ) AUDIO_FORMAT="$2"; shift 2 ;;
+    -* ) echo "error: unknown option $1" 1>&2; exit 1 ;;
+    * ) URLS+=("$1"); shift ;;
+  esac
+done
+
+# Validate command line arguments
+if [ -z "${OUTPUT_FORMAT}" ]; then
+  echo "error: option --output required" 1>&2
+  exit 1
+fi
+
+if [ ! "${#URLS[@]}" -gt 0 ]; then
+  echo "error: URL argument missing" 1>&2
+  exit 1
+fi
+
+exec "${YTDLP}" \
+     --extract-audio \
+     --audio-format "${AUDIO_FORMAT}" \
+     --audio-quality "${AUDIO_QUALITY}" \
+     --output "${OUTPUT_FORMAT}" \
+     "${URLS}"
 
 # EOF #
