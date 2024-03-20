@@ -21,7 +21,6 @@ set -e
 GETOPT=getopt
 FFMPEG=ffmpeg
 
-INPUTFLAGS=()
 OUTPATTERN=""
 SEGMENT_TIME="1800"
 SEGMENT_START_NUMBER="0"
@@ -52,16 +51,15 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Validate command line arguments
-if [[ $# -lt 1 ]]; then
+if [ ! $# -gt 0 ]; then
   echo "error: FILE argument missing" 1>&2
   exit 1
-else
-  INPUTFLAGS=("-i" "concat:")
-  for i in "$@"; do
-    # FIXME: bad escaping
-    INPUTFLAGS[1]+="$i|"
-  done
 fi
+
+# Generate file list
+FILELIST=$(for i in "$@"; do
+  printf "file %q\n" "$(realpath "$i")"
+done)
 
 if [ -z "${OUTPATTERN}" ]; then
   echo "error: option --output required" 1>&2
@@ -69,7 +67,8 @@ if [ -z "${OUTPATTERN}" ]; then
 fi
 
 "${FFMPEG}" \
-  "${INPUTFLAGS[@]}" \
+  -safe 0 \
+  -f concat -i <(echo "${FILELIST}") \
   -f segment \
   -segment_time "${SEGMENT_TIME}" \
   -segment_start_number "${SEGMENT_START_NUMBER}" \
