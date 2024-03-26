@@ -20,6 +20,7 @@
 import argparse
 import io
 import json
+import multiprocessing
 import os
 import shlex
 import subprocess
@@ -70,6 +71,7 @@ def segments_from_chapters(filename: str) -> list[tuple[float, float]]:
 
     segments = []
     for chapter_js in js["chapters"]:
+        # title = chapters_js["tags"]["title"]
         segments.append((chapter_js["start_time"],
                          chapter_js["end_time"]))
     return segments
@@ -165,15 +167,23 @@ def call_ffmpeg(args: list[str],
         subprocess.check_call(["ffmpeg"] + args)
 
 
+def task_processor(args):
+    call_ffmpeg(*args)
+
+
 def main(argv: list[str]) -> None:
     opts = parse_args(argv[1:])
 
     input_args_list = build_ffmpeg_input_args_list(opts)
     filter_args = build_ffmpeg_filter_args(opts)
 
+    task_args_list = []
     for idx, input_args in enumerate(input_args_list):
         output_args = build_ffmpeg_output_args(opts, idx)
-        call_ffmpeg(input_args + filter_args + output_args, opts)
+        task_args_list += [(input_args + filter_args + output_args, opts)]
+
+    with multiprocessing.Pool() as pool:
+        pool.map(task_processor, task_args_list)
 
 
 def main_entrypoint() -> None:
