@@ -39,8 +39,10 @@ def parse_args(args: list[str]) -> argparse.Namespace:
                         help="Speedup audio by FACTOR")
     parser.add_argument('-o', '--output', type=str, metavar="PATTERN", required=True,
                         help="Write output to PATTERN")
-    parser.add_argument('-e', '--encoding', type=str, default=None,
-                        help="Output encoding")
+    parser.add_argument('-c', '--codec', type=str, default=None,
+                        help="Output codec")
+    parser.add_argument('-b', '--bitrate', type=str, default=None,
+                        help="Output codec bitrate")
     parser.add_argument('-n', '--dry-run', action='store_true',
                         help="Dry run without actual conversion")
     parser.add_argument('-v', '--verbose', action='store_true',
@@ -83,12 +85,11 @@ def build_ffmpeg_args(opts: argparse.Namespace):
                         "-segment_start_number", f"{opts.start}",
                         "-reset_timestamps", "1"]
 
-    if opts.encoding is None:
-        ffmpeg_args += ["-b:a", "128K"]
-    elif opts.encoding == "copy":
-        ffmpeg_args += ["-c", "copy"]
-    else:
-        ffmpeg_args += ["-b:a", opts.encoding]
+    if opts.codec is not None:
+        ffmpeg_args += ["-codec:a", f"{opts.codec}"]
+
+    if opts.bitrate is not None:
+        ffmpeg_args += ["-b:a", f"{opts.bitrate}"]
 
     # output flags
     ffmpeg_args += [f"{opts.output}"]
