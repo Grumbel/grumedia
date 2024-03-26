@@ -8,12 +8,29 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
+        pythonPackages = pkgs.python3Packages;
       in rec {
         packages = rec {
-          default = grumedia;
+          default = grumedia-all;
 
-          grumedia = pkgs.stdenv.mkDerivation rec {
+          grumedia-all = pkgs.buildEnv {
+            name = "grumedia-all";
+            paths = [ grumedia youtube2mp3 ];
+          };
+
+          grumedia = pythonPackages.buildPythonPackage rec {
             pname = "grumedia";
+            version = "0.0.0";
+            format = "pyproject";
+            src = ./.;
+
+            buildInputs = with pythonPackages; [
+              setuptools
+            ];
+          };
+
+          youtube2mp3 = pkgs.stdenv.mkDerivation rec {
+            pname = "youtube2mp3";
             version = "0.0.0";
 
             src = ./.;
@@ -32,23 +49,15 @@
         };
 
         apps = rec {
-          audio-join = flake-utils.lib.mkApp {
-            drv = packages.grumedia;
-            exePath = "/bin/grumedia-audio-join";
-          };
+          default = grumedia;
 
-          audio-split = flake-utils.lib.mkApp {
+          grumedia = flake-utils.lib.mkApp {
             drv = packages.grumedia;
-            exePath = "/bin/grumedia-audio-split";
-          };
-
-          audio-filter = flake-utils.lib.mkApp {
-            drv = packages.grumedia;
-            exePath = "/bin/grumedia-audio-filter";
+            exePath = "/bin/grumedia";
           };
 
           youtube2mp3 = flake-utils.lib.mkApp {
-            drv = packages.grumedia;
+            drv = packages.youtube2mp3;
             exePath = "/bin/grumedia-youtube2mp3";
           };
         };
