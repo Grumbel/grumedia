@@ -174,6 +174,11 @@ def task_processor(args):
 def main(argv: list[str]) -> None:
     opts = parse_args(argv[1:])
 
+    target_directory = os.path.dirname(opts.output)
+    if target_directory != "":
+        if  not os.path.isdir(target_directory):
+            os.mkdir(target_directory)
+
     input_args_list = build_ffmpeg_input_args_list(opts)
     filter_args = build_ffmpeg_filter_args(opts)
     verbose_args = ["-loglevel", "quiet"]
