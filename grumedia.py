@@ -19,12 +19,15 @@
 
 import argparse
 import io
+import json
 import os
 import shlex
 import subprocess
 import sys
 import tempfile
 import time
+
+from typing import Optional
 
 
 def parse_args(args: list[str]) -> argparse.Namespace:
@@ -33,6 +36,10 @@ def parse_args(args: list[str]) -> argparse.Namespace:
                         help="Input filename")
     parser.add_argument('-s', '--split', type=int, metavar="SECONDS", default=None,
                         help="Split audio file every SECONDS seconds")
+    parser.add_argument('--split-at', type=str, metavar="SPLITSPEC", default=None,
+                        help="Comma deliminated split points")
+    parser.add_argument('--split-at-chapters', action='store_true', default=False,
+                        help="Split at chapters")
     parser.add_argument('-S', '--start', type=int, metavar="INDEX", default=1,
                         help="Start output numbering at INDEX")
     parser.add_argument('-t', '--tempo', type=float, metavar="FACTOR", default=1.0,
@@ -54,10 +61,37 @@ def ffmpeg_quote(text: str):
     return shlex.quote(text)
 
 
-def build_ffmpeg_args(opts: argparse.Namespace):
+def segments_from_chapters(filename: str) -> list[tuple[float, float]]:
+    segments = []
+    proc = subprocess.Popen(["ffprobe", "-print_format", "json", "-show_chapters", filename],
+                            stdout=subprocess.PIPE)
+    outs, errs = proc.communicate()
+    js = json.loads(outs)
+
+    segments = []
+    for chapter_js in js["chapters"]:
+        segments.append((chapter_js["start_time"],
+                         chapter_js["end_time"]))
+    return segments
+
+
+def parse_segments(text: str) -> list[float]:
+    pos_list = text.split(",")
+    return [(pos_list[x], pos_list[x + 1]) for x in range(len(pos_list) - 1)] + [(pos_list[-1], None)]
+
+
+def build_ffmpeg_input_args_list(opts: argparse.Namespace) -> list[list[str]]:
+    if opts.split_at_chapters:
+        if len(opts.FILENAME) != 1:
+            raise RuntimeError("only one input file allowed for --split-at-chapters")
+        segments = segments_from_chapters(opts.FILENAME[0])
+    elif opts.split_at is not None:
+        segments = parse_segments(opts.split_at)
+    else:
+        segments = None
+
     ffmpeg_args = []
 
-    # input flags
     if len(opts.FILENAME) == 1:
         ffmpeg_args += ["-i", opts.FILENAME[0]]
     else:
@@ -74,9 +108,31 @@ def build_ffmpeg_args(opts: argparse.Namespace):
                         # select only the audio stream
                         "-map", "0:a"]
 
+    ffmpeg_args_list = []
+    if segments is None:
+        ffmpeg_args_list.append(ffmpeg_args)
+    else:
+        for start, end in segments:
+            segment_args = ["-ss", start]
+            if end is not None:
+                segment_args += ["-to", end]
+            ffmpeg_args_list.append(segment_args + ffmpeg_args)
+
+    return ffmpeg_args_list
+
+
+def build_ffmpeg_filter_args(opts: argparse.Namespace) -> list[str]:
+    ffmpeg_args = []
+
     # tempo flags
     if opts.tempo != 1.0:
         ffmpeg_args += ["-filter:a", f"atempo={opts.tempo}"]
+
+    return ffmpeg_args
+
+
+def build_ffmpeg_output_args(opts: argparse.Namespace, idx: Optional[int]) -> list[str]:
+    ffmpeg_args = []
 
     # split flags
     if opts.split is not None:
@@ -92,20 +148,32 @@ def build_ffmpeg_args(opts: argparse.Namespace):
         ffmpeg_args += ["-b:a", f"{opts.bitrate}"]
 
     # output flags
-    ffmpeg_args += [f"{opts.output}"]
+    if idx is not None:
+        ffmpeg_args += [f"{opts.output.format(idx)}"]
+    else:
+        ffmpeg_args += [f"{opts.output}"]
 
     return ffmpeg_args
 
 
-def main(argv: list[str]) -> None:
-    opts = parse_args(argv[1:])
-    ffmpeg_args = build_ffmpeg_args(opts)
-
+def call_ffmpeg(args: list[str],
+                opts: argparse.Namespace) -> None:
     if opts.verbose:
-        print(ffmpeg_args)
+        print(f"fmpeg arguments: {args}")
 
     if not opts.dry_run:
-        subprocess.check_call(["ffmpeg"] + ffmpeg_args)
+        subprocess.check_call(["ffmpeg"] + args)
+
+
+def main(argv: list[str]) -> None:
+    opts = parse_args(argv[1:])
+
+    input_args_list = build_ffmpeg_input_args_list(opts)
+    filter_args = build_ffmpeg_filter_args(opts)
+
+    for idx, input_args in enumerate(input_args_list):
+        output_args = build_ffmpeg_output_args(opts, idx)
+        call_ffmpeg(input_args + filter_args + output_args, opts)
 
 
 def main_entrypoint() -> None:
