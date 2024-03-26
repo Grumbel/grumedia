@@ -64,7 +64,7 @@ def ffmpeg_quote(text: str):
 
 def segments_from_chapters(filename: str) -> list[tuple[float, float]]:
     segments = []
-    proc = subprocess.Popen(["ffprobe", "-print_format", "json", "-show_chapters", filename],
+    proc = subprocess.Popen(["ffprobe", "-loglevel", "quiet", "-print_format", "json", "-show_chapters", filename],
                             stdout=subprocess.PIPE)
     outs, errs = proc.communicate()
     js = json.loads(outs)
@@ -176,11 +176,12 @@ def main(argv: list[str]) -> None:
 
     input_args_list = build_ffmpeg_input_args_list(opts)
     filter_args = build_ffmpeg_filter_args(opts)
+    verbose_args = ["-loglevel", "quiet"]
 
     task_args_list = []
     for idx, input_args in enumerate(input_args_list):
         output_args = build_ffmpeg_output_args(opts, idx)
-        task_args_list += [(input_args + filter_args + output_args, opts)]
+        task_args_list += [(verbose_args + input_args + filter_args + output_args, opts)]
 
     with multiprocessing.Pool() as pool:
         pool.map(task_processor, task_args_list)
