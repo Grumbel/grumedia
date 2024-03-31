@@ -99,7 +99,7 @@ def build_ffmpeg_input_args_list(opts: argparse.Namespace) -> list[list[str]]:
     else:
         fout = tempfile.NamedTemporaryFile(mode='w', encoding="UTF-8",
                                            prefix="grumedia_",
-                                           # delete_on_close=False
+                                           delete=not opts.verbose
                                            )
         for filename in opts.FILENAME:
             fout.write("file {:s}\n".format(ffmpeg_quote(os.path.abspath(filename))))
@@ -181,7 +181,7 @@ def main(argv: list[str]) -> None:
 
     input_args_list = build_ffmpeg_input_args_list(opts)
     filter_args = build_ffmpeg_filter_args(opts)
-    verbose_args = ["-loglevel", "quiet"]
+    verbose_args = [] if opts.verbose else ["-loglevel", "quiet"]
 
     task_args_list = []
     for idx, input_args in enumerate(input_args_list):
