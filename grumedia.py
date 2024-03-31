@@ -102,7 +102,7 @@ def build_ffmpeg_input_args_list(opts: argparse.Namespace) -> list[list[str]]:
                                            # delete_on_close=False
                                            )
         for filename in opts.FILENAME:
-            fout.write("file {:s}\n".format(ffmpeg_quote(filename)))
+            fout.write("file {:s}\n".format(ffmpeg_quote(os.path.abspath(filename))))
         fout.flush()
 
         ffmpeg_args += ["-safe", "0",
