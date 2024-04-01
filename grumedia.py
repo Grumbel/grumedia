@@ -106,9 +106,10 @@ def build_ffmpeg_input_args_list(opts: argparse.Namespace) -> list[list[str]]:
         fout.flush()
 
         ffmpeg_args += ["-safe", "0",
-                        "-f", "concat", "-i", fout.name,
-                        # select only the audio stream
-                        "-map", "0:a"]
+                        "-f", "concat", "-i", fout.name]
+
+    # select only the audio stream
+    ffmpeg_args += ["-map", "0:a"]
 
     ffmpeg_args_list = []
     if segments is None:
