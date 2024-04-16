@@ -65,6 +65,6 @@ exec "${YTDLP}" \
      --audio-format "${AUDIO_FORMAT}" \
      --audio-quality "${AUDIO_QUALITY}" \
      --output "${OUTPUT_FORMAT}" \
-     "${URLS}"
+     "${URLS[@]}"
 
 # EOF #
