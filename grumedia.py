@@ -49,7 +49,7 @@ def parse_args(args: list[str]) -> argparse.Namespace:
                         help="Write output to PATTERN")
     parser.add_argument('-c', '--codec', type=str, default=None,
                         help="Output codec")
-    parser.add_argument('-b', '--bitrate', type=str, default=None,
+    parser.add_argument('-b', '--bitrate', type=str, default="64k",
                         help="Output codec bitrate")
     parser.add_argument('-n', '--dry-run', action='store_true',
                         help="Dry run without actual conversion")
