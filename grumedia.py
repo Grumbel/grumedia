@@ -99,7 +99,7 @@ def build_ffmpeg_input_args_list(opts: argparse.Namespace) -> list[list[str]]:
     else:
         fout = tempfile.NamedTemporaryFile(mode='w', encoding="UTF-8",
                                            prefix="grumedia_",
-                                           delete=not opts.verbose
+                                           delete=False
                                            )
         for filename in opts.FILENAME:
             fout.write("file {:s}\n".format(ffmpeg_quote(os.path.abspath(filename))))
