@@ -180,6 +180,7 @@ def main(argv: list[str]) -> None:
         if  not os.path.isdir(target_directory):
             os.mkdir(target_directory)
 
+    default_args = ["-nostdin"]
     input_args_list = build_ffmpeg_input_args_list(opts)
     filter_args = build_ffmpeg_filter_args(opts)
     verbose_args = [] if opts.verbose else ["-loglevel", "quiet"]
@@ -187,7 +188,7 @@ def main(argv: list[str]) -> None:
     task_args_list = []
     for idx, input_args in enumerate(input_args_list):
         output_args = build_ffmpeg_output_args(opts, idx)
-        task_args_list += [(verbose_args + input_args + filter_args + output_args, opts)]
+        task_args_list += [(default_args + verbose_args + input_args + filter_args + output_args, opts)]
 
     with multiprocessing.Pool() as pool:
         pool.map(task_processor, task_args_list)
