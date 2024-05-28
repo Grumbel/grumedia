@@ -61,6 +61,7 @@ if [ ! "${#URLS[@]}" -gt 0 ]; then
 fi
 
 exec "${YTDLP}" \
+     --split-chapters \
      --extract-audio \
      --audio-format "${AUDIO_FORMAT}" \
      --audio-quality "${AUDIO_QUALITY}" \
