@@ -61,7 +61,7 @@ def parse_args(args: list[str]) -> argparse.Namespace:
 def ffmpeg_quote_filepath(path: str):
     escaped_path = "'file:"
     for char in path:
-        if char == "\n":
+        if char in ["\n", "\r"]:
             raise RuntimeError(f"unquotable filename: {path}")
         elif char == "'":
             escaped_path += "'\\" + char + "'"
@@ -106,13 +106,13 @@ def build_ffmpeg_input_args_list(opts: argparse.Namespace) -> list[list[str]]:
     if len(opts.FILENAME) == 1:
         ffmpeg_args += ["-i", opts.FILENAME[0]]
     else:
-        fout = tempfile.NamedTemporaryFile(mode='w', encoding="UTF-8",
+        fout = tempfile.NamedTemporaryFile(mode='wb',
                                            prefix="grumedia_",
                                            delete=False
                                            )
-        fout.write("ffconcat version 1.0\n")
+        fout.write(b"ffconcat version 1.0\n")
         for filename in opts.FILENAME:
-            fout.write("file {:s}\n".format(ffmpeg_quote_filepath(os.path.abspath(filename))))
+            fout.write(os.fsencode("file {:s}\n".format(ffmpeg_quote_filepath(os.path.abspath(filename)))))
         fout.flush()
 
         ffmpeg_args += ["-safe", "0",
