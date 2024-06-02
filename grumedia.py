@@ -58,8 +58,17 @@ def parse_args(args: list[str]) -> argparse.Namespace:
     return parser.parse_args(args)
 
 
-def ffmpeg_quote(text: str):
-    return shlex.quote(text)
+def ffmpeg_quote_filepath(path: str):
+    escaped_path = "'file:"
+    for char in path:
+        if char == "\n":
+            raise RuntimeError(f"unquotable filename: {path}")
+        elif char == "'":
+            escaped_path += "'\\" + char + "'"
+        else:
+            escaped_path += char
+    escaped_path += "'"
+    return escaped_path
 
 
 def segments_from_chapters(filename: str) -> list[tuple[float, float]]:
@@ -101,8 +110,9 @@ def build_ffmpeg_input_args_list(opts: argparse.Namespace) -> list[list[str]]:
                                            prefix="grumedia_",
                                            delete=False
                                            )
+        fout.write("ffconcat version 1.0\n")
         for filename in opts.FILENAME:
-            fout.write("file {:s}\n".format(ffmpeg_quote(os.path.abspath(filename))))
+            fout.write("file {:s}\n".format(ffmpeg_quote_filepath(os.path.abspath(filename))))
         fout.flush()
 
         ffmpeg_args += ["-safe", "0",
