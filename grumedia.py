@@ -144,11 +144,21 @@ def build_ffmpeg_filter_args(opts: argparse.Namespace) -> list[str]:
     return ffmpeg_args
 
 
+def opts_check_output_fmt(fmt: str):
+    # FIXME: This might not check for the exact same output pattern as
+    # ffmpeg is using, but should be close enough to be useful.
+    try:
+        fmt % 5
+    except Exception as err:
+        raise RuntimeError("{!r}: incorrect output format string".format(fmt))
+
+
 def build_ffmpeg_output_args(opts: argparse.Namespace, idx: Optional[int]) -> list[str]:
     ffmpeg_args = []
 
     # split flags
     if opts.split is not None:
+        opts_check_output_fmt(opts.output)
         ffmpeg_args += ["-f", "segment",
                         "-segment_time", f"{opts.split}",
                         "-segment_start_number", f"{opts.start}",
