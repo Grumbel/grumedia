@@ -45,6 +45,8 @@ def parse_args(args: list[str]) -> argparse.Namespace:
                         help="Start output numbering at INDEX")
     parser.add_argument('-t', '--tempo', type=float, metavar="FACTOR", default=1.0,
                         help="Speedup audio by FACTOR")
+    parser.add_argument('-V', '--voice', action='store_true',
+                        help="Apply Eq to improve voice")
     parser.add_argument('-o', '--output', type=str, metavar="PATTERN", required=True,
                         help="Write output to PATTERN")
     parser.add_argument('-c', '--codec', type=str, default=None,
@@ -135,11 +137,28 @@ def build_ffmpeg_input_args_list(opts: argparse.Namespace) -> list[list[str]]:
 
 
 def build_ffmpeg_filter_args(opts: argparse.Namespace) -> list[str]:
-    ffmpeg_args = []
+    filter_args = []
+
+    # attemp to improve voice with eq
+    if opts.voice:
+        filter_args += [
+            "afftdn=nf=-25",
+            "equalizer=f=100:t=h:g=-3",
+            "equalizer=f=200:t=q:g=3",
+            "equalizer=f=1000:t=q:g=3",
+            "equalizer=f=4000:t=q:g=3",
+            "equalizer=f=6000:t=h:g=-3",
+            "equalizer=f=8000:t=h:g=-3",
+            "equalizer=f=12000:t=h:g=2"
+        ]
 
     # tempo flags
     if opts.tempo != 1.0:
-        ffmpeg_args += ["-filter:a", f"atempo={opts.tempo}"]
+        filter_args += [f"atempo={opts.tempo}"]
+
+    ffmpeg_args = []
+    if filter_args:
+        ffmpeg_args = ["-filter:a", ",".join(filter_args)]
 
     return ffmpeg_args
 
