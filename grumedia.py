@@ -216,8 +216,10 @@ def main(argv: list[str]) -> None:
 
     target_directory = os.path.dirname(opts.output)
     if target_directory != "":
-        if  not os.path.isdir(target_directory):
+        try:
             os.mkdir(target_directory)
+        except FileExistsError:
+            pass
 
     default_args = ["-nostdin"]
     input_args_list = build_ffmpeg_input_args_list(opts)
